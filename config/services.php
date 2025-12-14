@@ -53,4 +53,28 @@ return [
         'redirect' => env('GITHUB_REDIRECT_URI'),
     ],
 
+
+    'x' => [
+        'client_id'     => env('X_CLIENT_ID'),
+        'client_secret' => env('X_CLIENT_SECRET'),
+        'redirect'      => env('X_REDIRECT_URI'),
+    ],
+
+    'discord' => [
+        'client_id'     => env('DISCORD_CLIENT_ID'),
+        'client_secret' => env('DISCORD_CLIENT_SECRET'),
+        'redirect'      => env('DISCORD_REDIRECT_URI'),
+    ],
+
+
+
+    'github_app' => [
+        'app_id' => env('GITHUB_APP_ID'),
+        'client_id' => env('GITHUB_APP_CLIENT_ID'),
+        'client_secret' => env('GITHUB_APP_CLIENT_SECRET'),
+        'redirect' => env('GITHUB_APP_REDIRECT_URI'),
+        'private_key_path' => env('GITHUB_APP_PRIVATE_KEY_PATH'),
+    ],
+
+
 ];

@@ -10,6 +10,8 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         SocialiteWasCalled::class => [
             'SocialiteProviders\\Facebook\\FacebookExtendSocialite@handle',
+            'SocialiteProviders\Discord\DiscordExtendSocialite@handle',
+
         ],
     ];
 

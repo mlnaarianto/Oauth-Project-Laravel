@@ -13,27 +13,11 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->string('google_id')->nullable();
-            $table->string('facebook_id')->nullable(); // <-- TAMBAHKAN INI
-            // Dua avatar terpisah
-            $table->string('google_avatar')->nullable();
-            $table->string('facebook_avatar')->nullable();
-
-            $table->string('github_id')->nullable();
-            $table->string('github_avatar')->nullable();
-
-            // Avatar hasil download lokal (HANYA Google)
-            $table->string('avatar_local_path')->nullable(); // <-- tambahan disini
-
-
             $table->string('last_login_provider')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
+
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

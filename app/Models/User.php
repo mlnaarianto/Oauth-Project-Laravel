@@ -10,83 +10,48 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-
-        // Social login
-        'google_id',
-        'facebook_id',
-        'github_id', // <-- tambahkan
-
-
-        // Avatar terpisah
-        'google_avatar',
-        'facebook_avatar',
-        'github_avatar', // <-- tambahkan
-
-
-        'avatar_local_path',
-
-        // Tambahkan kolom baru
         'last_login_provider',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     */
     protected $hidden = [
-        'password',
         'remember_token',
     ];
 
-    /**
-     * Types for casts.
-     */
-    protected function casts(): array
+    /** Relasi ke SocialAccounts */
+    public function socialAccounts()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(SocialAccount::class);
     }
 
-    /**
-     * Accessor: avatar gabungan google / facebook / default.
-     * Avatar akan disesuaikan dengan provider login terakhir.
-     */
-    public function getAvatarAttribute()
+    /** Ambil akun berdasarkan provider */
+    public function socialAccountByProvider(string $provider)
     {
-        if ($this->last_login_provider === 'google' && !empty($this->google_avatar)) {
-            return $this->google_avatar;
-        }
+        return $this->socialAccounts()->where('provider', $provider)->first();
+    }
 
-        if ($this->last_login_provider === 'facebook' && !empty($this->facebook_avatar)) {
-            return $this->facebook_avatar;
-        }
+    /** Ambil akun utama */
+    public function primarySocialAccount()
+    {
+        return $this->socialAccountByProvider($this->last_login_provider)
+            ?? $this->socialAccounts()->first();
+    }
 
-        if ($this->last_login_provider === 'github' && !empty($this->github_avatar)) {
-            return $this->github_avatar;
-        }
+    /** ==== FIXED: jangan pakai name(), email(), avatar() ==== */
 
-        // Fallback jika provider tidak diketahui
-        if (!empty($this->google_avatar)) {
-            return $this->google_avatar;
-        }
+    public function userName()
+    {
+        return optional($this->primarySocialAccount())->name ?? 'User';
+    }
 
-        if (!empty($this->facebook_avatar)) {
-            return $this->facebook_avatar;
-        }
+    public function userEmail()
+    {
+        return optional($this->primarySocialAccount())->email ?? null;
+    }
 
-        if (!empty($this->github_avatar)) {
-            return $this->github_avatar;
-        }
-
-        // Default avatar
-        return asset('images/images1.png');
+    public function userAvatar()
+    {
+        return optional($this->primarySocialAccount())->avatar_url
+            ?? asset('images/default-avatar.png');
     }
 }

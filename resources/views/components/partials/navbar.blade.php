@@ -14,38 +14,43 @@
     <div class="ms-auto d-flex align-items-center gap-3">
         @auth
 
+            @php
+                $avatar = Auth::user()->userAvatar();
+                $name = Auth::user()->userName();
+                $email = Auth::user()->userEmail();
+            @endphp
+
+
             {{-- Dropdown User Profile --}}
             <div class="dropdown">
                 <button class="btn d-flex align-items-center text-white dropdown-toggle" type="button" id="profileDropdown"
                     data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent; border: none;">
 
-                    
                     {{-- Avatar kecil di navbar --}}
-                    <img src="{{ Auth::user()->avatar }}" alt="User Avatar" class="rounded-circle me-2" width="35"
+                    <img src="{{ $avatar }}" alt="User Avatar" class="rounded-circle me-2" width="35"
                         height="35" style="object-fit: cover;"
                         onerror="this.onerror=null; this.src='{{ asset('images/images1.png') }}';">
 
-
                     <span class="fw-semibold d-none d-md-inline">
-                        {{ Auth::user()->name }}
+                        {{ $name }}
                     </span>
                 </button>
 
                 <ul class="dropdown-menu dropdown-menu-end mt-2 p-0" aria-labelledby="profileDropdown"
                     style="width: 260px;">
 
-                    {{-- Bagian header: avatar besar + nama + email --}}
+                    {{-- Header: Avatar besar + Nama + Email --}}
                     <li class="p-3 border-bottom">
                         <div class="text-center">
-                            <img src="{{ Auth::user()->avatar }}" class="rounded-circle mb-2" width="70" height="70"
+                            <img src="{{ $avatar }}" class="rounded-circle mb-2" width="70" height="70"
                                 style="object-fit: cover;"
                                 onerror="this.onerror=null; this.src='{{ asset('images/images1.png') }}';">
 
                             <div class="fw-semibold" style="font-size: 0.95rem;">
-                                {{ Auth::user()->name }}
+                                {{ $name }}
                             </div>
                             <div class="text-muted" style="font-size: 0.8rem;">
-                                {{ Auth::user()->email }}
+                                {{ $email }}
                             </div>
                         </div>
                     </li>
