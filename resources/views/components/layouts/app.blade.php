@@ -1,27 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'My App' }}</title>
 
+    {{-- Bootstrap --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
+    {{-- SweetAlert --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
-
     <style>
-        body {
-            overflow-x: hidden;
+        /* RESET */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* body tidak scroll */
         }
 
+        /* SIDEBAR */
         #sidebar {
             width: 250px;
-            min-height: 100vh;
+            height: 100vh;
             background: #212529;
             transition: all 0.3s ease-in-out;
+            flex-shrink: 0;
         }
 
         #sidebar.collapsed {
@@ -37,15 +42,46 @@
             color: #fff;
         }
 
+        /* WRAPPER UTAMA (NAVBAR SUDAH DI LUAR) */
+        .app-wrapper {
+            display: flex;
+            height: calc(100vh - 56px); /* tinggi navbar bootstrap */
+        }
+
+        /* AREA KANAN */
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        /* CONTENT (INI YANG SCROLL) */
+        #content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: #f8f9fa;
+        }
+
+        /* FOOTER */
+        footer {
+            flex-shrink: 0;
+            background: #fff;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* MOBILE */
         @media (max-width: 768px) {
             #sidebar {
-                margin-left: -250px;
                 position: fixed;
+                top: 56px;
+                left: -250px;
                 z-index: 999;
             }
 
             #sidebar.show {
-                margin-left: 0;
+                left: 0;
             }
         }
     </style>
@@ -53,22 +89,31 @@
 
 <body>
 
+    {{-- NAVBAR --}}
     <x-partials.navbar />
 
-    <div class="d-flex">
+    {{-- BODY --}}
+    <div class="app-wrapper">
+
+        {{-- SIDEBAR --}}
         <x-partials.sidebar />
 
-        <div id="content" class="flex-grow-1 p-4">
-            {{ $slot }}
+        {{-- MAIN AREA --}}
+        <div class="main-area">
+
+            {{-- CONTENT --}}
+            <div id="content">
+                {{ $slot }}
+            </div>
+
+            {{-- FOOTER --}}
+            <x-partials.footer />
+
         </div>
     </div>
 
-    <x-partials.footer />
-
-    <!-- ... script Bootstrap ... -->
+    {{-- JS --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Tambahkan JS SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
@@ -76,15 +121,20 @@
         const sidebarToggle = document.getElementById('sidebarToggle');
         const mobileToggle = document.getElementById('mobileToggle');
 
-        sidebarToggle?.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
-        mobileToggle?.addEventListener('click', () => sidebar.classList.toggle('show'));
+        sidebarToggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
 
-        // 🚀 FIX untuk Facebook login (#_=_)
+        mobileToggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
+        });
+
+        // FIX Facebook login (#_=_)
         if (window.location.hash === "#_=_") {
             history.replaceState(null, null, window.location.pathname + window.location.search);
         }
 
-        // 🎉 Tampilkan SweetAlert jika ada pesan sukses
+        // SweetAlert sukses login
         @if (session('login_name') && session('login_provider'))
             Swal.fire({
                 icon: 'success',
@@ -95,8 +145,7 @@
             });
         @endif
 
-
-        // 💁‍♂️ (Opsional) Tampilkan SweetAlert jika ada pesan error
+        // SweetAlert error
         @if (session('error'))
             Swal.fire({
                 icon: 'error',
@@ -106,6 +155,6 @@
         @endif
     </script>
 
+    @stack('scripts')
 </body>
-
 </html>

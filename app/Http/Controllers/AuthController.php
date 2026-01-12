@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
-
     protected $pendingMinutes = 30;
 
     public function showLoginForm()
@@ -61,7 +60,6 @@ class AuthController extends Controller
 
         return $avatar;
     }
-
 
     private function getDiscordAvatar($providerUser): string
     {
@@ -111,6 +109,17 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * Check if email is a Gmail address
+     */
+    private function isGmailAddress(?string $email): bool
+    {
+        if (!$email) {
+            return false;
+        }
+        
+        return str_ends_with(strtolower($email), '@gmail.com');
+    }
 
     public function redirectToProvider($provider, Request $request)
     {
@@ -219,7 +228,6 @@ class AuthController extends Controller
 
         $avatar = $this->normalizeAvatar($provider, $rawAvatar);
 
-
         // 1. Cek apakah social account sudah terdaftar
         $social = SocialAccount::where('provider', $provider)
             ->where('provider_user_id', $providerUserId)
@@ -257,8 +265,8 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
 
-        // 2. PERIKSA APAKAH EMAIL NULL - JIKA YA, ARAHKAN KE HALAMAN INPUT EMAIL
-        if (!$email) {
+        // 2. PERIKSA APAKAH EMAIL NULL ATAU BUKAN GMAIL
+        if (!$email || !$this->isGmailAddress($email)) {
             $token = Str::random(40);
             Cache::put("social_missing_email:{$token}", [
                 'provider' => $provider,
@@ -268,10 +276,15 @@ class AuthController extends Controller
                 'access_token' => $providerUser->token,
                 'refresh_token' => $providerUser->refreshToken,
                 'expires_in' => $providerUser->expiresIn,
+                'original_email' => $email, // Simpan email asli untuk referensi
             ], $this->pendingMinutes * 60);
 
+            $message = !$email 
+                ? ucfirst($provider) . ' tidak menyediakan email Anda. Silakan masukkan email Gmail untuk melanjutkan.'
+                : 'Anda harus menggunakan alamat email Gmail (@gmail.com) untuk melanjutkan. Silakan masukkan email Gmail Anda.';
+                
             return redirect()->route('social.askEmail', ['token' => $token])
-                ->with('info', ucfirst($provider) . ' tidak menyediakan email Anda. Silakan masukkan email untuk melanjutkan.');
+                ->with('info', $message);
         }
 
         // 3. Cek apakah email sudah digunakan oleh akun lain
@@ -319,7 +332,6 @@ class AuthController extends Controller
         return redirect()->route('dashboard');
     }
 
-
     public function showConfirmLink(Request $request)
     {
         $token = $request->query('token') ?? session('social_pending_token');
@@ -349,7 +361,6 @@ class AuthController extends Controller
             $driver->stateless();
         }
 
-
         // Tambahkan scope yang diperlukan
         if ($provider === 'github') {
             $driver->scopes(['user:email']);
@@ -363,7 +374,6 @@ class AuthController extends Controller
 
         return $driver->redirect();
     }
-
 
     public function confirmProviderCallback($provider, Request $request, $providerUser)
     {
@@ -381,6 +391,11 @@ class AuthController extends Controller
         $email = $payload['email'];
         if (!$email) {
             return redirect('/login')->with('error', 'Email tidak tersedia untuk dikonfirmasi.');
+        }
+
+        // Pastikan email adalah Gmail
+        if (!$this->isGmailAddress($email)) {
+            return redirect('/login')->with('error', 'Hanya alamat email Gmail (@gmail.com) yang diperbolehkan.');
         }
 
         $targetUser = null;
@@ -423,7 +438,6 @@ class AuthController extends Controller
         return redirect()->route('dashboard')->with('success', 'Penautan akun ' . ucfirst($provider) . ' berhasil.');
     }
 
-
     public function requestOtp($provider, Request $request)
     {
         $token = $request->input('token');
@@ -435,6 +449,11 @@ class AuthController extends Controller
         $payload = Cache::get("social_pending:{$token}");
         if (empty($payload['email'])) {
             return response()->json(['success' => false, 'message' => 'Email provider tidak tersedia.'], 400);
+        }
+
+        // Pastikan email adalah Gmail
+        if (!$this->isGmailAddress($payload['email'])) {
+            return response()->json(['success' => false, 'message' => 'Hanya alamat email Gmail (@gmail.com) yang diperbolehkan.'], 400);
         }
 
         $otp = random_int(100000, 999999);
@@ -460,7 +479,6 @@ class AuthController extends Controller
         ]);
     }
 
-
     public function verifyOtp($provider, Request $request)
     {
         $token = $request->input('token');
@@ -482,6 +500,12 @@ class AuthController extends Controller
         }
 
         $email = $payload['email'];
+        
+        // Pastikan email adalah Gmail
+        if (!$this->isGmailAddress($email)) {
+            return response()->json(['success' => false, 'message' => 'Hanya alamat email Gmail (@gmail.com) yang diperbolehkan.'], 400);
+        }
+
         $targetUser = null;
         $existingSocial = SocialAccount::where('email', $email)->first();
         if ($existingSocial) {
@@ -534,8 +558,13 @@ class AuthController extends Controller
             return redirect('/login')->with('error', 'Token tidak ditemukan atau sudah kadaluarsa.');
         }
 
+        $payload = Cache::get("social_missing_email:{$token}");
+        $originalEmail = $payload['original_email'] ?? null;
+
         return view('tampilan.social-ask-email', [
-            'token' => $token
+            'token' => $token,
+            'original_email' => $originalEmail,
+            'provider' => $payload['provider']
         ]);
     }
 
@@ -547,13 +576,18 @@ class AuthController extends Controller
         ]);
 
         $token = $request->token;
+        $email = $request->email;
 
         if (!Cache::has("social_missing_email:{$token}")) {
             return redirect('/login')->with('error', 'Token tidak valid atau sudah kadaluarsa.');
         }
 
+        // Validasi bahwa email harus Gmail
+        if (!$this->isGmailAddress($email)) {
+            return redirect()->back()->with('error', 'Hanya alamat email Gmail (@gmail.com) yang diperbolehkan.');
+        }
+
         $payload = Cache::get("social_missing_email:{$token}");
-        $email = $request->email;
 
         $otp = random_int(100000, 999999);
 
@@ -595,6 +629,11 @@ class AuthController extends Controller
 
         $payload = $data['payload'];
         $email = $data['email'];
+
+        // Pastikan email adalah Gmail
+        if (!$this->isGmailAddress($email)) {
+            return redirect('/login')->with('error', 'Hanya alamat email Gmail (@gmail.com) yang diperbolehkan.');
+        }
 
         $existingSocial = SocialAccount::where('email', $email)->first();
         $existingUser = null;
@@ -679,7 +718,6 @@ class AuthController extends Controller
             'token' => $token
         ]);
     }
-
 
     public function logout(Request $request)
     {

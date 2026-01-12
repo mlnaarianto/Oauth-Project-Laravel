@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\VideoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,6 +95,18 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
+
+    Route::get('/video', [VideoController::class, 'index'])
+        ->name('video.index');
+
+    Route::post('/video', [VideoController::class, 'store'])
+        ->name('video.store');
+
+    Route::put('/video/{video}', [VideoController::class, 'update'])
+        ->name('video.update');
+
+    Route::delete('/video/{video}', [VideoController::class, 'destroy'])
+        ->name('video.destroy');
 
     Route::get('/profil', [ProfileController::class, 'index'])
         ->name('profil');

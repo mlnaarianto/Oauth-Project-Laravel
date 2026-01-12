@@ -8,10 +8,11 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link {{ Request::is('about') ? 'active' : '' }}" href="/about">
-                <i class="bi bi-info-circle"></i> About
+            <a class="nav-link {{ Request::is('video') ? 'active' : '' }}" href="/video">
+                <i class="bi bi-play-circle"></i> Video
             </a>
         </li>
+
 
         <li class="nav-item mt-3">
             <small class="text-secondary ms-2">Menu Lain</small>
