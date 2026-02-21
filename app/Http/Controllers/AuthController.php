@@ -262,7 +262,11 @@ class AuthController extends Controller
 
             $social->user->update(['last_login_provider' => $provider]);
             Auth::login($social->user);
-            return redirect()->route('dashboard');
+            
+            // PERBAIKAN: Tambahkan session untuk SweetAlert
+            return redirect()->route('dashboard')
+                ->with('login_name', $name)
+                ->with('login_provider', $provider);
         }
 
         // 2. PERIKSA APAKAH EMAIL NULL ATAU BUKAN GMAIL
@@ -329,7 +333,11 @@ class AuthController extends Controller
         }
 
         Auth::login($user);
-        return redirect()->route('dashboard');
+
+        // PERBAIKAN: Tambahkan session untuk SweetAlert
+        return redirect()->route('dashboard')
+            ->with('login_name', $name)
+            ->with('login_provider', $provider);
     }
 
     public function showConfirmLink(Request $request)
@@ -435,7 +443,11 @@ class AuthController extends Controller
         Cache::forget("social_pending:{$token}");
         session()->forget('social_pending_token');
 
-        return redirect()->route('dashboard')->with('success', 'Penautan akun ' . ucfirst($provider) . ' berhasil.');
+        // PERBAIKAN: Tambahkan session untuk SweetAlert
+        return redirect()->route('dashboard')
+            ->with('success', 'Penautan akun ' . ucfirst($provider) . ' berhasil.')
+            ->with('login_name', $providerUser->getName())
+            ->with('login_provider', $provider);
     }
 
     public function requestOtp($provider, Request $request)
@@ -544,9 +556,12 @@ class AuthController extends Controller
         Cache::forget("social_pending:{$token}");
         session()->forget('social_pending_token');
 
+        // PERBAIKAN: Kembalikan data login di JSON untuk ditangani frontend
         return response()->json([
             'success' => true,
-            'redirect_url' => route('dashboard')
+            'redirect_url' => route('dashboard'),
+            'login_name' => $payload['name'],
+            'login_provider' => $payload['provider']
         ]);
     }
 
@@ -678,7 +693,11 @@ class AuthController extends Controller
             Cache::forget("social_missing_email:{$token}");
             Cache::forget("social_missing_email_otp:{$token}");
 
-            return redirect()->route('dashboard')->with('success', 'Akun ' . ucfirst($payload['provider']) . ' berhasil ditautkan ke akun Anda yang ada.');
+            // PERBAIKAN: Tambahkan session untuk SweetAlert
+            return redirect()->route('dashboard')
+                ->with('success', 'Akun ' . ucfirst($payload['provider']) . ' berhasil ditautkan ke akun Anda yang ada.')
+                ->with('login_name', $payload['name'])
+                ->with('login_provider', $payload['provider']);
         }
 
         $user = User::create([
@@ -703,7 +722,10 @@ class AuthController extends Controller
         Cache::forget("social_missing_email:{$token}");
         Cache::forget("social_missing_email_otp:{$token}");
 
-        return redirect()->route('dashboard');
+        // PERBAIKAN: Tambahkan session untuk SweetAlert
+        return redirect()->route('dashboard')
+            ->with('login_name', $payload['name'])
+            ->with('login_provider', $payload['provider']);
     }
 
     public function showAskEmailVerify(Request $request)

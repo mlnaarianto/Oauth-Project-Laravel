@@ -186,7 +186,7 @@
                                                                class="form-control"
                                                                value="{{ $v->youtube_url }}"
                                                                required>
-                                                        <div class="form-text">Contoh: https://www.youtube.com/watch?v=xxxxx</div>
+                                                        {{-- <div class="form-text">Contoh: https://www.youtube.com/watch?v=xxxxx</div> --}}
                                                     </div>
 
                                                     <div class="form-check form-switch">
@@ -286,7 +286,7 @@
                                    class="form-control"
                                    placeholder="https://www.youtube.com/watch?v=xxxxx"
                                    required>
-                            <div class="form-text">Contoh: https://www.youtube.com/watch?v=xxxxx</div>
+                            {{-- <div class="form-text">Contoh: https://www.youtube.com/watch?v=xxxxx</div> --}}
                         </div>
 
                         <div class="form-check form-switch">
