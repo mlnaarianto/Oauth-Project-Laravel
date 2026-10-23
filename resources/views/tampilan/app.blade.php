@@ -108,6 +108,12 @@
             backdrop-filter: none !important;
         }
 
+        /* --- TAMBAHAN: Menggeser posisi toast ke bawah agar tidak menutupi navbar --- */
+        .swal2-container.swal2-top-end {
+            top: 4.5rem !important; /* 4.5rem = 72px. Sesuaikan angkanya jika perlu */
+        }
+        /* --------------------------------------------------------------------------- */
+
         /* ----- Toast ----- */
         .swal-toast {
             --swal-accent: #22d3ee;

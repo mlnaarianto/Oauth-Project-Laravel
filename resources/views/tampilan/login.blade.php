@@ -33,19 +33,6 @@
         filter: drop-shadow(0 0 24px rgba(34, 211, 238, .18));
     }
 
-    /* --- Grid panel --- */
-    .cyber-panel-grid {
-        background-image:
-            linear-gradient(to right, rgba(15, 23, 42, .05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(15, 23, 42, .05) 1px, transparent 1px);
-        background-size: 48px 48px;
-    }
-    .dark .cyber-panel-grid {
-        background-image:
-            linear-gradient(to right, rgba(34, 211, 238, .07) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(34, 211, 238, .07) 1px, transparent 1px);
-    }
-
     /* --- Divider aksen tipis --- */
     .cyber-rule {
         height: 1px;
@@ -68,65 +55,17 @@
 {{-- 3. Gunakan flex-1 agar section otomatis merenggang mengisi seluruh ruang main --}}
 <section class="relative flex flex-1 flex-col bg-white lg:flex-row dark:bg-[#070b12]">
     
-    {{-- ================= KIRI: Branding panel ================= --}}
-    <aside class="cyber-panel-grid relative hidden overflow-hidden border-r border-slate-200/70 bg-slate-50 lg:flex lg:w-1/2 dark:border-slate-800/80 dark:bg-[#070b12]">
+    {{-- ================= KIRI: Branding panel (Full Image) ================= --}}
+    <aside class="relative hidden overflow-hidden border-r border-slate-200/70 bg-slate-50 lg:flex lg:w-1/2 dark:border-slate-800/80 dark:bg-[#070b12]">
+        
+        {{-- Gambar Full dari folder public/images --}}
+        <img src="{{ asset('images/1.jpeg') }}" 
+             alt="Login Illustration" 
+             class="absolute inset-0 h-full w-full object-cover object-center" />
 
-        {{-- Glow dekoratif --}}
-        <div aria-hidden="true" class="pointer-events-none absolute -top-32 -left-24 h-[420px] w-[420px] rounded-full bg-cyan-400/20 blur-[130px] dark:bg-cyan-500/15"></div>
-        <div aria-hidden="true" class="pointer-events-none absolute -bottom-32 -right-24 h-[380px] w-[380px] rounded-full bg-fuchsia-400/10 blur-[130px] dark:bg-fuchsia-500/10"></div>
+        {{-- (Opsional) Overlay gelap tipis saat Dark Mode agar gambar tidak terlalu menyilaukan --}}
+        <div class="pointer-events-none absolute inset-0 hidden bg-black/20 dark:block"></div>
 
-        <div class="relative z-10 flex h-full w-full flex-col justify-between px-12 py-12 xl:px-20">
-
-            {{-- Top: mini logo --}}
-            <div class="flex items-center gap-3">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-xs font-bold tracking-tight text-white dark:bg-gradient-to-br dark:from-cyan-500 dark:to-indigo-500">M</div>
-                <div class="flex flex-col leading-none">
-                    <span class="text-base font-semibold tracking-tight text-slate-900 dark:text-white">My<span class="cyber-gradient-text">App</span></span>
-                    <span class="mt-1 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Digital Workspace</span>
-                </div>
-            </div>
-
-            {{-- Center: headline + badge --}}
-            <div class="my-8 text-center">
-                <div class="relative mb-8 inline-block">
-                    <div class="absolute inset-0 rounded-full bg-cyan-400/30 blur-2xl dark:bg-cyan-500/20"></div>
-                    <div class="relative mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-indigo-500/10 shadow-lg dark:border-cyan-400/25">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-cyan-600 dark:text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6l7-3z" />
-                            <path d="M9 12l2 2 4-4" />
-                        </svg>
-                    </div>
-                </div>
-
-                <h1 class="mb-4 text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl dark:text-slate-50">
-                    Satu akses,<br>
-                    semua <span class="cyber-gradient-text">layanan.</span>
-                </h1>
-                <p class="mx-auto max-w-sm text-base leading-relaxed text-slate-500 dark:text-slate-400">
-                    Login aman dengan penyedia identitas favorit. Tanpa kata sandi baru, tanpa hambatan.
-                </p>
-
-                <div class="mt-10 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-cyan-600 dark:text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6l7-3z" />
-                    </svg>
-                    Akses ruang aman terenkripsi
-                </div>
-            </div>
-
-            {{-- Bottom: status --}}
-            <div class="flex items-center gap-3 font-mono text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                <span class="flex items-center gap-1.5">
-                    <span class="relative flex h-1.5 w-1.5" aria-hidden="true">
-                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-60"></span>
-                        <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyan-500"></span>
-                    </span>
-                    System Online
-                </span>
-                <span class="text-slate-300 dark:text-slate-600">·</span>
-                <span>auth.v2</span>
-            </div>
-        </div>
     </aside>
 
     {{-- ================= KANAN: Form login ================= --}}

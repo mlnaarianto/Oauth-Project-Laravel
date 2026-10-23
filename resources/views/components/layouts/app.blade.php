@@ -58,6 +58,12 @@
         body:not(.swal2-toast-shown) .swal2-container.swal2-noanimation { background: rgba(15, 23, 42, .55); backdrop-filter: blur(4px); }
         body.swal2-toast-shown .swal2-container { background: transparent !important; backdrop-filter: none !important; }
 
+        /* --- TAMBAHAN: Menggeser posisi toast ke bawah agar tidak menutupi navbar --- */
+        .swal2-container.swal2-top-end {
+            top: 4.5rem !important; /* 4.5rem = 72px. Sesuaikan angkanya jika perlu */
+        }
+        /* --------------------------------------------------------------------------- */
+
         .swal-popup {
             --swal-accent: #22d3ee;
             position: relative; overflow: hidden;
@@ -211,7 +217,7 @@
                 });
             });
 
-            /* ---------- Sidebar toggles (logika asli, tidak diubah) ---------- */
+            /* ---------- Sidebar toggles ---------- */
             sidebarToggle?.addEventListener('click', () => {
                 sidebar.classList.toggle('md:-ml-64');
             });
