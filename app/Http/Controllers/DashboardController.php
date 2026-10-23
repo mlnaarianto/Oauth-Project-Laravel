@@ -7,44 +7,29 @@ use App\Models\SocialAccount;
 class DashboardController extends Controller
 {
     /**
-     * Tampilkan halaman dashboard dengan statistik provider
+     * Tampilkan halaman dashboard dengan ringkasan akun per provider.
      */
     public function index()
     {
-        // Menghitung jumlah akun per provider
+        // Ambil jumlah akun per provider dalam satu query
         $providerStats = SocialAccount::selectRaw('provider, COUNT(*) as count')
             ->groupBy('provider')
-            ->orderBy('count', 'asc')
             ->get()
             ->keyBy('provider');
-        
-        // Menyiapkan data untuk grafik
+
+        // Daftar provider yang didukung — urutan tetap dijaga
         $providers = ['google', 'facebook', 'github', 'x', 'discord'];
+
         $providerCounts = [];
-        $providerColors = [
-            'google' => '#4285F4',
-            'facebook' => '#1877F2',
-            'github' => '#333333',
-            'x' => '#1DA1F2',
-            'discord' => '#7289DA'
-        ];
-        
         foreach ($providers as $provider) {
-            $providerCounts[$provider] = $providerStats->has($provider) 
-                ? $providerStats[$provider]->count 
+            $providerCounts[$provider] = $providerStats->has($provider)
+                ? (int) $providerStats[$provider]->count
                 : 0;
         }
-        
-        // Total semua akun
-        $totalAccounts = SocialAccount::count();
-        
-        // Data untuk grafik
-        $chartData = [
-            'labels' => array_map('ucfirst', $providers),
-            'data' => array_values($providerCounts),
-            'backgroundColor' => array_values(array_intersect_key($providerColors, array_flip($providers)))
-        ];
-        
-        return view('menu.dashboard', compact('chartData', 'totalAccounts', 'providerCounts'));
+
+        // Total hanya menghitung provider yang tampil di UI
+        $totalAccounts = array_sum($providerCounts);
+
+        return view('menu.dashboard', compact('providerCounts', 'totalAccounts'));
     }
 }

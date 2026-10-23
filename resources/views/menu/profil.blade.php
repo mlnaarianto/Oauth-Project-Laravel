@@ -1,102 +1,231 @@
+{{-- resources/views/menu/profil.blade.php --}}
 <x-layouts.app title="Profil Saya">
 
-    <div class="py-8 px-4 sm:px-6">
-        <div class="max-w-3xl mx-auto">
+    @php
+        $user = Auth::user();
 
-            {{-- Notifikasi Sukses --}}
+        $providerKey = strtolower($user->last_login_provider ?? 'sistem');
+
+        $providerLabels = [
+            'google'   => 'Google',
+            'facebook' => 'Facebook',
+            'github'   => 'GitHub',
+            'x'        => 'X',
+            'discord'  => 'Discord',
+            'sistem'   => 'Sistem',
+        ];
+        $providerColors = [
+            'google'   => '#4285F4',
+            'facebook' => '#1877F2',
+            'github'   => '#6E7681',
+            'x'        => '#1DA1F2',
+            'discord'  => '#5865F2',
+            'sistem'   => '#0891b2',
+        ];
+        $providerLabel = $providerLabels[$providerKey] ?? ucfirst($providerKey);
+        $providerColor = $providerColors[$providerKey] ?? '#0891b2';
+    @endphp
+
+    <style>
+        /* ============ Sudut Lancip (Clip-Path) ============ */
+        .corner-outer {
+            position: relative;
+            padding: 1px;
+            background: linear-gradient(135deg,
+                rgba(34, 211, 238, .6) 0%,
+                rgba(34, 211, 238, .1) 30%,
+                rgba(167, 139, 250, .1) 70%,
+                rgba(167, 139, 250, .5) 100%);
+            clip-path: polygon(
+                20px 0, 100% 0,
+                100% calc(100% - 20px), calc(100% - 20px) 100%,
+                0 100%, 0 20px
+            );
+        }
+
+        .corner-inner {
+            clip-path: polygon(
+                19px 0, 100% 0,
+                100% calc(100% - 19px), calc(100% - 19px) 100%,
+                0 100%, 0 19px
+            );
+        }
+
+        /* Garis Aksen Sudut */
+        .corner-accent {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-color: rgba(34, 211, 238, .8);
+            border-style: solid;
+            pointer-events: none;
+            z-index: 3;
+        }
+        .corner-accent.tl {
+            top: 20px; left: 6px;
+            border-bottom-width: 2px; border-right-width: 2px;
+        }
+        .corner-accent.br {
+            bottom: 20px; right: 6px;
+            border-top-width: 2px; border-left-width: 2px;
+        }
+
+        /* Avatar Chip */
+        .avatar-chip {
+            clip-path: polygon(
+                14px 0, 100% 0,
+                100% calc(100% - 14px), calc(100% - 14px) 100%,
+                0 100%, 0 14px
+            );
+        }
+    </style>
+
+    <div class="px-4 py-8 sm:px-6">
+        {{-- Sedikit dilebarkan agar proporsional --}}
+        <div class="mx-auto max-w-4xl">
+
+            {{-- NOTIFIKASI --}}
             @if (session('success'))
-                <div class="flex items-start gap-3 p-4 mb-4 text-sm text-green-800 bg-green-50 border border-green-200 rounded-xl dark:bg-green-900/30 dark:text-green-300 dark:border-green-800" role="alert">
-                    <!-- Ikon Check Circle -->
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <div class="flex-1">{{ session('success') }}</div>
-                    <button type="button" class="ml-auto text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200" onclick="this.parentElement.remove()">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
+                <div class="relative mb-4 overflow-hidden rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3.5 dark:border-emerald-400/25 dark:bg-emerald-400/5" role="alert">
+                    <div class="flex items-center gap-3">
+                        <svg class="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9" /><path d="m9 12 2 2 4-4" /></svg>
+                        <div class="flex-1 text-sm text-emerald-800 dark:text-emerald-300">{{ session('success') }}</div>
+                        <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-emerald-600/70 hover:text-emerald-700" aria-label="Tutup"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+                    </div>
                 </div>
             @endif
 
-            {{-- Notifikasi Error --}}
             @if (session('error'))
-                <div class="flex items-start gap-3 p-4 mb-4 text-sm text-red-800 bg-red-50 border border-red-200 rounded-xl dark:bg-red-900/30 dark:text-red-300 dark:border-red-800" role="alert">
-                    <!-- Ikon Warning -->
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    <div class="flex-1">{{ session('error') }}</div>
-                    <button type="button" class="ml-auto text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200" onclick="this.parentElement.remove()">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
+                <div class="relative mb-4 overflow-hidden rounded-lg border border-red-500/30 bg-red-500/5 p-3.5 dark:border-red-400/25 dark:bg-red-400/5" role="alert">
+                    <div class="flex items-center gap-3">
+                        <svg class="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="9" /><path d="M12 8v4M12 16h.01" /></svg>
+                        <div class="flex-1 text-sm text-red-700 dark:text-red-300">{{ session('error') }}</div>
+                        <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-600/70 hover:text-red-700" aria-label="Tutup"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+                    </div>
                 </div>
             @endif
 
-            <!-- CARD UTAMA PROFIL -->
-            <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors duration-300">
+            {{-- KARTU PROFIL --}}
+            <div class="corner-outer">
+                <div class="corner-inner relative bg-white dark:bg-[#0b1220]">
+                    <span class="corner-accent tl" aria-hidden="true"></span>
+                    <span class="corner-accent br" aria-hidden="true"></span>
 
-                {{-- Header Profil --}}
-                <div class="p-8 text-center bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                    
-                    {{-- Avatar --}}
-                    <div class="relative inline-block mb-4">
-                        <img id="avatar-preview" 
-                             src="{{ Auth::user()->userAvatar() }}"
-                             class="w-36 h-36 rounded-full shadow-lg border-4 border-white dark:border-slate-700 object-cover mx-auto"
-                             onerror="this.onerror=null; this.src='{{ asset('images/images1.png') }}';">
+                    {{-- HEADER --}}
+                    <div class="relative overflow-hidden border-b border-slate-200 px-6 py-8 dark:border-slate-800">
+
+                        {{-- Grid background --}}
+                        <div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-60"
+                             style="background-image: linear-gradient(to right, rgba(34,211,238,.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(34,211,238,.06) 1px, transparent 1px); background-size: 32px 32px; -webkit-mask-image: radial-gradient(ellipse 70% 100% at 50% 50%, #000 30%, transparent 90%); mask-image: radial-gradient(ellipse 70% 100% at 50% 50%, #000 30%, transparent 90%);"></div>
+                        <div aria-hidden="true" class="pointer-events-none absolute left-1/2 top-1/2 h-32 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-3xl dark:bg-cyan-500/15"></div>
+
+                        <div class="relative flex flex-col items-center text-center">
+                            
+                            {{-- Badge ditaruh di ATAS avatar agar tidak tabrakan --}}
+                            <div class="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/5 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-700 dark:border-cyan-400/25 dark:bg-cyan-400/5 dark:text-cyan-300">
+                                <span class="relative flex h-1.5 w-1.5"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-60"></span><span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyan-500"></span></span>
+                                user.profile
+                            </div>
+
+                            {{-- Avatar (Diperkecil jadi 96px / h-24 w-24) --}}
+                            <div class="relative inline-block">
+                                <div class="relative" style="padding: 2px; background: linear-gradient(135deg, #22d3ee, #a78bfa);">
+                                    <div class="avatar-chip bg-white dark:bg-[#0b1220]" style="padding: 2px;">
+                                        <img id="avatar-preview"
+                                             src="{{ $user->userAvatar() }}"
+                                             alt="Avatar {{ $user->userName() }}"
+                                             class="avatar-chip h-24 w-24 object-cover"
+                                             onerror="this.onerror=null; this.src='{{ asset('images/images1.png') }}';">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Nama & Email --}}
+                            <h3 class="mt-4 text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+                                {{ $user->userName() }}
+                            </h3>
+                            <p class="mt-1 max-w-[250px] truncate text-sm text-slate-500 dark:text-slate-400">
+                                {{ $user->userEmail() }}
+                            </p>
+
+                            {{-- Provider --}}
+                            <div class="mt-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-slate-600 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
+                                <span class="h-1.5 w-1.5 rounded-full" style="background-color: {{ $providerColor }}"></span>
+                                masuk via {{ $providerLabel }}
+                            </div>
+                        </div>
                     </div>
 
-                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-1">{{ Auth::user()->userName() }}</h3>
-                    <p class="text-slate-500 dark:text-slate-400 mb-0">{{ Auth::user()->userEmail() }}</p>
-                </div>
-
-                {{-- Konten Utama: Grid 2 Kolom --}}
-                <div class="grid grid-cols-1 md:grid-cols-2">
-
-                    {{-- Kolom Kiri: Informasi Akun --}}
-                    <div class="p-6 md:border-r border-slate-200 dark:border-slate-700">
-                        <h5 class="flex items-center gap-2 text-lg font-bold text-blue-600 dark:text-blue-400 mb-6">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Detail Dasar
-                        </h5>
-
-                        <ul class="divide-y divide-slate-200 dark:divide-slate-700">
-                            <li class="flex justify-between items-center py-4">
-                                <span class="text-slate-500 dark:text-slate-400">Nama Lengkap</span>
-                                <span class="font-semibold text-slate-900 dark:text-white text-right">{{ Auth::user()->userName() }}</span>
-                            </li>
-
-                            <li class="flex justify-between items-center py-4">
-                                <span class="text-slate-500 dark:text-slate-400">Email</span>
-                                <span class="font-semibold text-slate-900 dark:text-white text-right break-all">{{ Auth::user()->userEmail() }}</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {{-- Kolom Kanan: Keamanan Akun --}}
-                    <div class="p-6">
-                        <h5 class="flex items-center gap-2 text-lg font-bold text-red-600 dark:text-red-400 mb-6">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                            Keamanan Akun
-                        </h5>
-
-                        <ul class="divide-y divide-slate-200 dark:divide-slate-700">
-                            <li class="flex justify-between items-center py-4">
-                                <span class="text-slate-500 dark:text-slate-400">Login Terakhir Via</span>
-                                <!-- Badge Provider -->
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
-                                    {{ ucfirst(Auth::user()->last_login_provider ?? 'Sistem') }}
+                    {{-- BODY: GRID 2 KOLOM --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2">
+                        
+                        {{-- KIRI: Identitas --}}
+                        <section class="border-b border-dashed border-slate-200 p-6 dark:border-slate-800 md:border-b-0 md:border-r">
+                            <header class="mb-4 flex items-center gap-3">
+                                <span class="inline-flex h-8 w-8 items-center justify-center rounded border border-cyan-500/25 bg-cyan-500/10 text-cyan-600 dark:border-cyan-400/25 dark:bg-cyan-400/10 dark:text-cyan-300">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>
                                 </span>
-                            </li>
+                                <div>
+                                    <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-500">identitas</p>
+                                    <h5 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Detail Dasar</h5>
+                                </div>
+                            </header>
 
-                            <li class="flex justify-between items-center py-4">
-                                <span class="text-slate-500 dark:text-slate-400">Tanggal Dibuat</span>
-                                <span class="font-semibold text-slate-900 dark:text-white text-right">{{ Auth::user()->created_at->format('d F Y') }}</span>
-                            </li>
-                        </ul>
+                            <dl class="divide-y divide-dashed divide-slate-200 dark:divide-slate-800">
+                                <div class="flex items-start justify-between gap-4 py-3">
+                                    <dt class="text-sm text-slate-500 dark:text-slate-400">Nama Lengkap</dt>
+                                    <dd class="text-right text-sm font-medium text-slate-900 dark:text-slate-100">{{ $user->userName() }}</dd>
+                                </div>
+                                <div class="flex items-start justify-between gap-4 py-3">
+                                    <dt class="text-sm text-slate-500 dark:text-slate-400">Email</dt>
+                                    <dd class="break-all text-right font-mono text-[13px] text-slate-900 dark:text-slate-100">{{ $user->userEmail() }}</dd>
+                                </div>
+                            </dl>
+                        </section>
+
+                        {{-- KANAN: Keamanan --}}
+                        <section class="p-6">
+                            <header class="mb-4 flex items-center gap-3">
+                                <span class="inline-flex h-8 w-8 items-center justify-center rounded border border-violet-500/25 bg-violet-500/10 text-violet-600 dark:border-violet-400/25 dark:bg-violet-400/10 dark:text-violet-300">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 2 3 6v6c0 5 3.8 9 9 10 5.2-1 9-5 9-10V6l-9-4Z" /><path d="m9 12 2 2 4-4" /></svg>
+                                </span>
+                                <div>
+                                    <p class="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-500">security</p>
+                                    <h5 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Keamanan Akun</h5>
+                                </div>
+                            </header>
+
+                            <dl class="divide-y divide-dashed divide-slate-200 dark:divide-slate-800">
+                                <div class="flex items-center justify-between gap-4 py-3">
+                                    <dt class="text-sm text-slate-500 dark:text-slate-400">Login Terakhir</dt>
+                                    <dd>
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 font-mono text-[10px] text-slate-700 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+                                            <span class="h-1.5 w-1.5 rounded-full" style="background-color: {{ $providerColor }}"></span>
+                                            {{ $providerLabel }}
+                                        </span>
+                                    </dd>
+                                </div>
+                                <div class="flex items-center justify-between gap-4 py-3">
+                                    <dt class="text-sm text-slate-500 dark:text-slate-400">Dibuat Pada</dt>
+                                    <dd class="text-right text-sm font-medium text-slate-900 dark:text-slate-100">{{ $user->created_at->format('d M Y') }}</dd>
+                                </div>
+                            </dl>
+                        </section>
+
                     </div>
-                    
-                </div> {{-- Akhir Grid --}}
-                
-            </div> {{-- Akhir Card --}}
+
+                    {{-- FOOTER STRIP --}}
+                    <div class="flex items-center justify-between border-t border-slate-200 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.15em] text-slate-500 dark:border-slate-800 dark:text-slate-500">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="h-2.5 w-2.5 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg>
+                            akun aktif
+                        </span>
+                        <span>id // {{ str_pad($user->id, 6, '0', STR_PAD_LEFT) }}</span>
+                    </div>
+
+                </div>
+            </div>
 
         </div>
     </div>
-
 </x-layouts.app>
