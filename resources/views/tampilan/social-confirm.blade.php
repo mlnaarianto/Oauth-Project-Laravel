@@ -4,138 +4,146 @@
 @section('title', 'Konfirmasi Penautan Akun Sosial')
 
 @section('content')
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-7">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
-                        <h3 class="mb-3">Konfirmasi Penautan Akun</h3>
+    <div class="min-h-screen py-12 px-4 sm:px-6 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <div class="max-w-3xl mx-auto">
+            <!-- Card Utama -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="p-6 sm:p-8">
+                    
+                    <h3 class="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Konfirmasi Penautan Akun</h3>
 
-                        @if (session('info'))
-                            <div class="alert alert-info">{{ session('info') }}</div>
+                    @if (session('info'))
+                        <div class="p-4 mb-6 text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded-xl dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
+                            {{ session('info') }}
+                        </div>
+                    @endif
+
+                    {{-- RINGKASAN AKUN PROVIDER --}}
+                    <div class="flex items-center mb-6">
+                        @if (!empty($payload['avatar']))
+                            <img src="{{ $payload['avatar'] }}" class="w-14 h-14 rounded-full object-cover mr-4 border-2 border-slate-200 dark:border-slate-600">
+                        @else
+                            <!-- Placeholder jika tidak ada avatar -->
+                            <div class="w-14 h-14 rounded-full bg-slate-300 dark:bg-slate-600 mr-4 shrink-0"></div>
                         @endif
 
-                        {{-- RINGKASAN AKUN PROVIDER --}}
-                        <div class="d-flex align-items-center mb-3">
-                            @if (!empty($payload['avatar']))
-                                <img src="{{ $payload['avatar'] }}" class="rounded-circle me-3"
-                                    style="width:56px;height:56px;object-fit:cover;">
-                            @else
-                                <div class="rounded-circle bg-secondary me-3" style="width:56px;height:56px;"></div>
-                            @endif
-
-                            <div>
-                                <strong>{{ ucfirst($payload['provider']) }} Account</strong><br>
-                                <small class="text-muted">{{ $payload['email'] ?? 'Email tidak tersedia' }}</small>
-                            </div>
-                        </div>
-
-                        <p>
-                            Email dari provider ini sudah digunakan oleh akun lain di sistem.
-                            Pilih metode verifikasi untuk melanjutkan penautan akun.
-                        </p>
-
-                        <hr>
-
-                        {{-- ================================
-                        1. USER SUDAH LOGIN → langsung tautkan
-                    ================================= --}}
-                        @auth
-                            <div class="mb-4">
-                                <h5>1) Tautkan ke akun yang sedang Anda gunakan</h5>
-                                <p class="text-muted">Anda login sebagai <strong>{{ auth()->user()->email }}</strong>.</p>
-
-                                <form action="{{ route('social.confirm.post') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="token" value="{{ $token }}">
-                                    <button class="btn btn-primary">
-                                        Tautkan {{ ucfirst($payload['provider']) }} ke akun ini
-                                    </button>
-                                </form>
-                            </div>
-                            <hr>
-                        @endauth
-
-                        {{-- ====================================
-                        2. KONFIRMASI VIA PROVIDER (UTAMA)
-                    ===================================== --}}
-                        <div class="mb-4">
-                            <h5>
-                                @auth
-                                    2)
-                                @else
-                                    1)
-                                @endauth
-                                Konfirmasi dengan {{ ucfirst($payload['provider']) }}
-                            </h5>
-
-                            <p class="text-muted">
-                                Gunakan login {{ ucfirst($payload['provider']) }} untuk membuktikan bahwa Anda pemilik email
-                                ini.
-                            </p>
-
-                            {{-- Untuk GitHub, gunakan URL yang sama dengan login normal --}}
-                            @if ($payload['provider'] === 'github')
-                                <a href="{{ url('/auth/github?confirm_token=' . $token) }}" class="btn btn-success w-100">
-                                    Konfirmasi via GitHub
-                                </a>
-                            @else
-                                <a href="{{ url('/auth/confirm/' . $payload['provider'] . '?token=' . $token) }}"
-                                    class="btn btn-success w-100">
-                                    Konfirmasi via {{ ucfirst($payload['provider']) }}
-                                </a>
-                            @endif
-                        </div>
-
-
-                        {{-- ====================================
-                        3. VERIFIKASI VIA OTP
-                    ===================================== --}}
-                        <div class="mb-4">
-                            <h5>@auth 3)
-                                @else
-                                2) @endauth Verifikasi dengan Kode OTP</h5>
-                            <p class="text-muted">
-                                Kami akan mengirimkan kode verifikasi satu kali ke email Anda yang terdaftar di
-                                {{ ucfirst($payload['provider']) }}.
-                            </p>
-
-                            {{-- Form untuk meminta OTP --}}
-                            <div id="otp-request-form">
-                                <button type="button" class="btn btn-info w-100" id="request-otp-btn">
-                                    Kirim Kode OTP ke {{ $payload['email'] ?? 'email Anda' }}
-                                </button>
-                            </div>
-
-                            {{-- Form untuk memasukkan OTP (awalnya disembunyikan) --}}
-                            <div id="otp-verify-form" style="display: none;" class="mt-3">
-                                <div class="mb-2">
-                                    <label class="form-label">Masukkan Kode OTP</label>
-                                    <div class="input-group">
-                                        <input type="text" name="otp_code" id="otp-code" class="form-control"
-                                            placeholder="Masukkan 6 digit kode" maxlength="6" required>
-                                        <button type="button" class="btn btn-outline-secondary" id="resend-otp-btn">
-                                            Kirim Ulang
-                                        </button>
-                                    </div>
-                                    <small class="text-muted" id="otp-timer"></small>
-                                </div>
-                                <button type="button" class="btn btn-success w-100" id="verify-otp-btn">
-                                    Verifikasi & Tautkan Akun
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="mt-3 text-center">
-                            <a href="{{ route('login') }}" class="btn btn-link">Kembali ke login</a>
+                        <div>
+                            <strong class="text-slate-900 dark:text-white block">{{ ucfirst($payload['provider']) }} Account</strong>
+                            <small class="text-slate-500 dark:text-slate-400">{{ $payload['email'] ?? 'Email tidak tersedia' }}</small>
                         </div>
                     </div>
+
+                    <p class="text-slate-700 dark:text-slate-300 mb-6">
+                        Email dari provider ini sudah digunakan oleh akun lain di sistem.
+                        Pilih metode verifikasi untuk melanjutkan penautan akun.
+                    </p>
+
+                    <hr class="border-slate-200 dark:border-slate-700 my-6">
+
+                    {{-- ================================
+                    1. USER SUDAH LOGIN → langsung tautkan
+                    ================================= --}}
+                    @auth
+                        <div class="mb-6">
+                            <h5 class="text-lg font-bold text-slate-900 dark:text-white mb-2">1) Tautkan ke akun yang sedang Anda gunakan</h5>
+                            <p class="text-slate-600 dark:text-slate-400 mb-4">Anda login sebagai <strong class="text-slate-900 dark:text-white">{{ auth()->user()->email }}</strong>.</p>
+
+                            <form action="{{ route('social.confirm.post') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="token" value="{{ $token }}">
+                                <button class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800">
+                                    Tautkan {{ ucfirst($payload['provider']) }} ke akun ini
+                                </button>
+                            </form>
+                        </div>
+                        <hr class="border-slate-200 dark:border-slate-700 my-6">
+                    @endauth
+
+                    {{-- ====================================
+                    2. KONFIRMASI VIA PROVIDER (UTAMA)
+                    ===================================== --}}
+                    <div class="mb-6">
+                        <h5 class="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                            @auth
+                                2)
+                            @else
+                                1)
+                            @endauth
+                            Konfirmasi dengan {{ ucfirst($payload['provider']) }}
+                        </h5>
+
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Gunakan login {{ ucfirst($payload['provider']) }} untuk membuktikan bahwa Anda pemilik email ini.
+                        </p>
+
+                        {{-- Untuk GitHub, gunakan URL yang sama dengan login normal --}}
+                        @if ($payload['provider'] === 'github')
+                            <a href="{{ url('/auth/github?confirm_token=' . $token) }}" class="block w-full text-center py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800">
+                                Konfirmasi via GitHub
+                            </a>
+                        @else
+                            <a href="{{ url('/auth/confirm/' . $payload['provider'] . '?token=' . $token) }}" class="block w-full text-center py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800">
+                                Konfirmasi via {{ ucfirst($payload['provider']) }}
+                            </a>
+                        @endif
+                    </div>
+
+                    <hr class="border-slate-200 dark:border-slate-700 my-6">
+
+                    {{-- ====================================
+                    3. VERIFIKASI VIA OTP
+                    ===================================== --}}
+                    <div class="mb-6">
+                        <h5 class="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                            @auth 3) @else 2) @endauth Verifikasi dengan Kode OTP
+                        </h5>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">
+                            Kami akan mengirimkan kode verifikasi satu kali ke email Anda yang terdaftar di {{ ucfirst($payload['provider']) }}.
+                        </p>
+
+                        {{-- Form untuk meminta OTP --}}
+                        <div id="otp-request-form">
+                            <button type="button" class="w-full py-3 px-4 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-xl transition-colors focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800" id="request-otp-btn">
+                                Kirim Kode OTP ke {{ $payload['email'] ?? 'email Anda' }}
+                            </button>
+                        </div>
+
+                        {{-- Form untuk memasukkan OTP (awalnya disembunyikan) --}}
+                        <div id="otp-verify-form" style="display: none;" class="mt-4">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Masukkan Kode OTP</label>
+                                
+                                <!-- Input Group dengan Tailwind (Flexbox) -->
+                                <div class="flex">
+                                    <input type="text" name="otp_code" id="otp-code" 
+                                        class="w-full px-4 py-2.5 text-center tracking-[0.3em] font-mono rounded-l-xl border border-r-0 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" 
+                                        placeholder="Masukkan 6 digit kode" maxlength="6" required>
+                                    <button type="button" 
+                                        class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium rounded-r-xl border border-l-0 border-slate-300 dark:border-slate-600 transition-colors whitespace-nowrap" 
+                                        id="resend-otp-btn">
+                                        Kirim Ulang
+                                    </button>
+                                </div>
+                                <small class="block text-slate-500 dark:text-slate-400 mt-2" id="otp-timer"></small>
+                            </div>
+                            <button type="button" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed" id="verify-otp-btn">
+                                Verifikasi & Tautkan Akun
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 text-center">
+                        <a href="{{ route('login') }}" class="inline-block text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                            Kembali ke login
+                        </a>
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Script untuk menangani OTP --}}
+    {{-- Script untuk menangani OTP (Tidak ada yang diubah) --}}
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {

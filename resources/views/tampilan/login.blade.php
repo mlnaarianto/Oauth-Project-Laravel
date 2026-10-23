@@ -3,17 +3,19 @@
 @section('title', 'Login')
 
 @section('content')
-    <div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-        <div class="login-box text-center p-4">
+    <!-- Wrapper utama: min-h-screen, flexbox untuk center, dan background support dark mode -->
+    <div class="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4 transition-colors duration-300">
+        
+        <!-- Login Box: max-width, padding, shadow, dan dark mode support -->
+        <div class="w-full max-w-md p-8 text-center bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 transition-colors duration-300">
 
             {{-- Header --}}
-            <div class="mb-4">
-                {{-- Menggunakan h4 untuk judul dan h5 untuk deskripsi agar lebih lembut --}}
-                <h4 class="fw-bold">Login or Sign Up</h4>
-                <p class="text-muted mb-0">Continue using one of the options below</p>
+            <div class="mb-6">
+                <h4 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Login or Sign Up</h4>
+                <p class="text-slate-500 dark:text-slate-400">Continue using one of the options below</p>
             </div>
 
-            <hr class="my-4"> {{-- Tambahkan garis pemisah untuk memperjelas --}}
+            <hr class="my-6 border-slate-200 dark:border-slate-700"> {{-- Garis pemisah --}}
 
             {{-- Dynamic Provider Buttons --}}
             @php
@@ -54,10 +56,14 @@
 
             @foreach ($enabledProviders as $provider)
                 @if (isset($providers[$provider]))
+                    <!-- Tombol Social: Full width, flexbox, hover effect, dan dark mode -->
                     <a href="{{ route('oauth.redirect', $provider) }}"
-                        class="btn btn-light btn-social w-100 shadow-sm py-2 mb-3 d-flex align-items-center justify-content-center gap-2">
-                        <img src="{{ $providers[$provider]['icon'] }}" width="22"
+                        class="flex items-center justify-center gap-3 w-full px-4 py-3 mb-3 text-base font-semibold text-slate-700 bg-white border border-slate-300 rounded-xl shadow-sm hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-600">
+                        
+                        <!-- Tambahkan class dark:invert agar ikon hitam berubah putih di dark mode -->
+                        <img src="{{ $providers[$provider]['icon'] }}" width="22" class="w-[22px] h-[22px] dark:invert"
                             alt="{{ $providers[$provider]['label'] }} Icon">
+                        
                         {{ $providers[$provider]['label'] }}
                     </a>
                 @endif
@@ -65,72 +71,19 @@
 
             {{-- Error --}}
             @if (session('error'))
-                <div class="alert alert-danger mt-3" role="alert">
+                <div class="mt-4 p-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800" role="alert">
                     {{ session('error') }}
                 </div>
             @endif
 
             {{-- Footer/Legal Info --}}
-            <p class="text-muted small mt-4 mb-0">By continuing, you agree to our <a href="#">Terms of Service</a> and
-                <a href="#">Privacy Policy</a>.</p>
+            <p class="mt-6 text-sm text-slate-500 dark:text-slate-400">
+                By continuing, you agree to our <a href="#" class="font-semibold text-blue-600 hover:underline dark:text-blue-400">Terms of Service</a> and
+                <a href="#" class="font-semibold text-blue-600 hover:underline dark:text-blue-400">Privacy Policy</a>.
+            </p>
 
         </div>
     </div>
 @endsection
 
-@push('styles')
-    <style>
-        /* Menggunakan font-family yang lebih universal atau diimport (jika ada) */
-        body {
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
-
-        .login-box {
-            width: 100%;
-            max-width: 420px;
-            /* Border radius sedikit lebih kecil untuk tampilan modern */
-            border-radius: 12px;
-            background: white;
-            /* Menggunakan box-shadow yang lebih dalam tapi lembut */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            /* Hapus border: 1px solid #eee; karena sudah ada shadow */
-        }
-
-        .btn-social {
-            /* Styling default dihilangkan karena sudah menggunakan btn btn-light Bootstrap */
-
-            /* Border dan warna diserahkan ke Bootstrap, kita hanya perhalus hover */
-            border-radius: 8px;
-            /* Sudut tombol lebih lembut */
-            font-size: 1rem;
-            /* Ukuran font standar */
-            font-weight: 600;
-            /* Sedikit lebih tebal */
-            transition: all .2s ease-in-out;
-            border: 1px solid #dee2e6;
-            /* Border tipis untuk tombol light */
-        }
-
-        .btn-social:hover {
-            /* Efek hover lebih menonjol */
-            background-color: #f1f1f1 !important;
-            border-color: #ced4da !important;
-            transform: translateY(-1px);
-            /* Efek 'angkat' saat di-hover */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .btn-social img {
-            /* Pastikan ikon tidak berubah ukuran */
-            flex-shrink: 0;
-        }
-
-        /* Responsif: Padding lebih kecil di layar sangat kecil */
-        @media (max-width: 576px) {
-            .login-box {
-                max-width: 95%;
-                margin: 20px;
-            }
-        }
-    </style>
-@endpush
+{{-- Bagian @push('styles') sudah dihapus total karena tidak diperlukan lagi --}}

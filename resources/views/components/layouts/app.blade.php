@@ -1,110 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'My App' }}</title>
 
-    {{-- Bootstrap --}}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    {{-- Vite --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- SweetAlert --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
-    <style>
-        /* RESET */
-        html, body {
-            height: 100%;
-            margin: 0;
-            overflow: hidden; /* body tidak scroll */
-        }
-
-        /* SIDEBAR */
-        #sidebar {
-            width: 250px;
-            height: 100vh;
-            background: #212529;
-            transition: all 0.3s ease-in-out;
-            flex-shrink: 0;
-        }
-
-        #sidebar.collapsed {
-            margin-left: -250px;
-        }
-
-        #sidebar .nav-link {
-            color: #adb5bd;
-        }
-
-        #sidebar .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        /* WRAPPER UTAMA (NAVBAR SUDAH DI LUAR) */
-        .app-wrapper {
-            display: flex;
-            height: calc(100vh - 56px); /* tinggi navbar bootstrap */
-        }
-
-        /* AREA KANAN */
-        .main-area {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            min-width: 0;
-        }
-
-        /* CONTENT (INI YANG SCROLL) */
-        #content {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 1.5rem;
-            background: #f8f9fa;
-        }
-
-        /* FOOTER */
-        footer {
-            flex-shrink: 0;
-            background: #fff;
-            border-top: 1px solid #dee2e6;
-        }
-
-        /* MOBILE */
-        @media (max-width: 768px) {
-            #sidebar {
-                position: fixed;
-                top: 56px;
-                left: -250px;
-                z-index: 999;
-            }
-
-            #sidebar.show {
-                left: 0;
-            }
-        }
-    </style>
 </head>
 
-<body>
+<body class="h-screen overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
 
     {{-- NAVBAR --}}
     <x-partials.navbar />
 
-    {{-- BODY --}}
-    <div class="app-wrapper">
+    {{-- BODY WRAPPER --}}
+    <div class="flex h-[calc(100vh-56px)]">
 
         {{-- SIDEBAR --}}
         <x-partials.sidebar />
 
         {{-- MAIN AREA --}}
-        <div class="main-area">
+        <div class="flex flex-col flex-1 min-w-0">
 
-            {{-- CONTENT --}}
-            <div id="content">
+            {{-- CONTENT (SCROLLABLE) --}}
+            <main id="content" class="flex-1 overflow-y-auto p-6">
                 {{ $slot }}
-            </div>
+            </main>
 
             {{-- FOOTER --}}
             <x-partials.footer />
@@ -113,7 +39,6 @@
     </div>
 
     {{-- JS --}}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
@@ -121,12 +46,14 @@
         const sidebarToggle = document.getElementById('sidebarToggle');
         const mobileToggle = document.getElementById('mobileToggle');
 
+        // Desktop toggle: geser sidebar keluar pakai margin
         sidebarToggle?.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
+            sidebar.classList.toggle('md:-ml-64');
         });
 
+        // Mobile toggle: geser sidebar pakai translate
         mobileToggle?.addEventListener('click', () => {
-            sidebar.classList.toggle('show');
+            sidebar.classList.toggle('-translate-x-full');
         });
 
         // FIX Facebook login (#_=_)
