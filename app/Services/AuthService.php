@@ -52,11 +52,11 @@ class AuthService
         $providerUserId = $providerUser->getId();
         $email = $providerUser->getEmail();
         $name = $providerUser->getName() ?: $providerUser->getNickname() ?: "User-{$providerUserId}";
-        
+
         $rawAvatar = $provider === 'discord'
             ? $this->getDiscordAvatar($providerUser)
             : $providerUser->getAvatar();
-            
+
         $avatar = $this->normalizeAvatar($provider, $rawAvatar);
 
         // 1. Cek apakah social account sudah terdaftar
@@ -104,7 +104,7 @@ class AuthService
                 'original_email' => $email,
             ], $this->pendingMinutes * 60);
 
-            $message = !$email 
+            $message = !$email
                 ? ucfirst($provider) . ' tidak menyediakan email Anda. Silakan masukkan email Gmail untuk melanjutkan.'
                 : 'Anda harus menggunakan alamat email Gmail (@gmail.com) untuk melanjutkan. Silakan masukkan email Gmail Anda.';
 
@@ -117,12 +117,19 @@ class AuthService
 
         if ($existingSocial || $existingUser) {
             $token = Str::random(40);
+
+            // [BARU] Unduh avatar Google untuk preview di halaman konfirmasi
+            $avatarPreview = $provider === 'google'
+                ? $this->downloadPendingAvatar($avatar, $token)
+                : null;
+
             Cache::put("social_pending:{$token}", [
                 'provider' => $provider,
                 'provider_user_id' => $providerUserId,
                 'email' => $email,
                 'name' => $name,
-                'avatar' => $avatar,
+                'avatar' => $avatar,                // URL asli (dipakai saat membuat SocialAccount)
+                'avatar_preview' => $avatarPreview, // [BARU] path lokal, khusus tampilan
                 'access_token' => $providerUser->token,
                 'refresh_token' => $providerUser->refreshToken,
                 'expires_in' => $providerUser->expiresIn,
@@ -162,7 +169,7 @@ class AuthService
         $payload = Cache::get("social_pending:{$token}");
         $email = $payload['email'];
 
-        $targetUser = SocialAccount::where('email', $email)->first()?->user 
+        $targetUser = SocialAccount::where('email', $email)->first()?->user
             ?? (Schema::hasColumn('users', 'email') ? User::where('email', $email)->first() : null);
 
         if (!$targetUser) {
@@ -188,8 +195,9 @@ class AuthService
 
         $targetUser->update(['last_login_provider' => $provider]);
 
+        $this->deletePendingAvatar($token); // [BARU]
         Cache::forget("social_pending:{$token}");
-        
+
         return [
             'user' => $targetUser,
             'name' => $providerUser->getName(),
@@ -231,7 +239,7 @@ class AuthService
         if ($otpData['otp'] != $code) return ['success' => false, 'message' => 'Kode OTP salah.'];
         if (!$this->isGmailAddress($payload['email'])) return ['success' => false, 'message' => 'Hanya alamat email Gmail diperbolehkan.'];
 
-        $targetUser = SocialAccount::where('email', $payload['email'])->first()?->user 
+        $targetUser = SocialAccount::where('email', $payload['email'])->first()?->user
             ?? (Schema::hasColumn('users', 'email') ? User::where('email', $payload['email'])->first() : null);
 
         if (!$targetUser) return ['success' => false, 'message' => 'Akun tidak ditemukan.'];
@@ -255,6 +263,7 @@ class AuthService
 
         $targetUser->update(['last_login_provider' => $provider]);
 
+        $this->deletePendingAvatar($token); // [BARU]
         Cache::forget("otp_social:{$token}");
         Cache::forget("social_pending:{$token}");
 
@@ -290,14 +299,14 @@ class AuthService
     public function verifyAskEmailOtp(string $token, string $otp): array
     {
         $data = Cache::get("social_missing_email_otp:{$token}");
-        
+
         if ($data['otp'] != $otp) throw new \Exception('Kode OTP salah.');
         if (!$this->isGmailAddress($data['email'])) throw new \Exception('Hanya alamat email Gmail (@gmail.com) yang diperbolehkan.');
 
         $payload = $data['payload'];
         $email = $data['email'];
 
-        $existingUser = SocialAccount::where('email', $email)->first()?->user 
+        $existingUser = SocialAccount::where('email', $email)->first()?->user
             ?? (Schema::hasColumn('users', 'email') ? User::where('email', $email)->first() : null);
 
         if ($existingUser) {
@@ -310,14 +319,14 @@ class AuthService
             }
 
             $social = $this->createSocialAccount($existingUser->id, $payload, $email);
-            
+
             if ($payload['provider'] === 'google') {
                 $downloadedAvatar = $this->downloadProviderAvatar($social->avatar_url, $existingUser, $payload['provider'], $social);
                 $social->update(['avatar_url' => $downloadedAvatar ?: $social->avatar_url]);
             }
 
             $existingUser->update(['last_login_provider' => $payload['provider']]);
-            
+
             Cache::forget("social_missing_email:{$token}");
             Cache::forget("social_missing_email_otp:{$token}");
 
@@ -329,7 +338,13 @@ class AuthService
             'last_login_provider' => $payload['provider']
         ]);
 
-        $this->createSocialAccount($user->id, $payload, $email);
+        $social = $this->createSocialAccount($user->id, $payload, $email);
+
+        // [BARU] Konsisten: avatar Google juga diunduh untuk user yang baru dibuat
+        if ($payload['provider'] === 'google') {
+            $downloadedAvatar = $this->downloadProviderAvatar($social->avatar_url, $user, $payload['provider'], $social);
+            $social->update(['avatar_url' => $downloadedAvatar ?: $social->avatar_url]);
+        }
 
         Cache::forget("social_missing_email:{$token}");
         Cache::forget("social_missing_email_otp:{$token}");
@@ -391,6 +406,38 @@ class AuthService
         $discriminator = $raw['discriminator'] ?? '0';
         $index = intval($discriminator) % 5;
         return "https://cdn.discordapp.com/embed/avatars/{$index}.png";
+    }
+
+    /**
+     * [BARU] Unduh avatar Google untuk preview di halaman konfirmasi (tahap pending).
+     */
+    private function downloadPendingAvatar(?string $url, string $token): ?string
+    {
+        if (!$url) return null;
+
+        try {
+            $response = Http::timeout(10)->get($url);
+            if (!$response->successful()) return null;
+
+            $directory = 'avatars/pending';
+            Storage::disk('public')->makeDirectory($directory);
+
+            $path = "{$directory}/{$token}.jpg";
+            Storage::disk('public')->put($path, $response->body());
+
+            return "storage/{$path}";
+        } catch (\Exception $e) {
+            Log::error('Gagal mengunduh avatar pending', ['url' => $url, 'error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
+     * [BARU] Hapus file avatar pending setelah konfirmasi selesai.
+     */
+    private function deletePendingAvatar(string $token): void
+    {
+        Storage::disk('public')->delete("avatars/pending/{$token}.jpg");
     }
 
     private function downloadProviderAvatar(?string $url, User $user, string $provider, ?SocialAccount $social = null): ?string

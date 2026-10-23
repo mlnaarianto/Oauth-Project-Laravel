@@ -24,20 +24,24 @@ class User extends Authenticatable
         return $this->hasMany(SocialAccount::class);
     }
 
-    /** Ambil akun berdasarkan provider */
+    /**
+     * Ambil akun berdasarkan provider.
+     * Memakai properti relasi (tanpa kurung) supaya eager loading terpakai
+     * dan tidak terjadi N+1.
+     */
     public function socialAccountByProvider(string $provider)
     {
-        return $this->socialAccounts()->where('provider', $provider)->first();
+        return $this->socialAccounts->firstWhere('provider', $provider);
     }
 
     /** Ambil akun utama */
     public function primarySocialAccount()
     {
-        return $this->socialAccountByProvider($this->last_login_provider)
-            ?? $this->socialAccounts()->first();
+        return $this->socialAccountByProvider((string) $this->last_login_provider)
+            ?? $this->socialAccounts->first();
     }
 
-    /** ==== FIXED: jangan pakai name(), email(), avatar() ==== */
+    /** ==== Helper data profil dari social account ==== */
 
     public function userName()
     {
@@ -53,5 +57,15 @@ class User extends Authenticatable
     {
         return optional($this->primarySocialAccount())->avatar_url
             ?? asset('images/default-avatar.png');
+    }
+
+    /**
+     * Accessor opsional: $user->name langsung mengembalikan nama
+     * dari social account. Aman dipakai di loop jika memakai
+     * User::with('socialAccounts').
+     */
+    public function getNameAttribute()
+    {
+        return $this->userName();
     }
 }

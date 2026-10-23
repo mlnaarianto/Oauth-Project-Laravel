@@ -48,7 +48,8 @@ class AuthController extends Controller
                     $confirmToken = str_replace('confirm:', '', $decoded);
                     session(['social_pending_token' => $confirmToken]);
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
         }
 
         try {
@@ -161,7 +162,7 @@ class AuthController extends Controller
 
         try {
             $result = $this->authService->verifySocialConfirmOtp($token, $code, $provider);
-            
+
             if (!$result['success']) {
                 return response()->json($result, 400);
             }
@@ -241,15 +242,14 @@ class AuthController extends Controller
             $result = $this->authService->verifyAskEmailOtp($request->token, $request->otp);
             Auth::login($result['user']);
 
-            $message = $result['status'] === 'linked' 
-                ? 'Akun berhasil ditautkan ke akun Anda yang ada.' 
+            $message = $result['status'] === 'linked'
+                ? 'Akun berhasil ditautkan ke akun Anda yang ada.'
                 : 'Pendaftaran berhasil.';
 
             return redirect()->route('dashboard')
                 ->with('success', $message)
                 ->with('login_name', $result['name'])
                 ->with('login_provider', $result['provider']);
-
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -257,9 +257,13 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // Ambil nama SEBELUM logout/invalidate
+        $name = Auth::user()?->userName() ?? 'Pengguna';
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/login')->with('success', 'Anda telah logout.');
+
+        return redirect('/login')->with('logout_name', $name);
     }
 }
